@@ -1,0 +1,15 @@
+# Maven / Gradle
+target/
+build/
+
+# Compiled files
+*.class
+
+# IntelliJ
+.idea/
+*.iml
+
+# Logs
+*.log
+# Local environment files (may contain secrets)
+.env

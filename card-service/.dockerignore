@@ -1,0 +1,19 @@
+# Build output and IDE files
+**/target/
+**/build/
+.idea/
+**/*.iml
+*.log
+
+# Local Maven settings may contain credentials; the image uses ci/maven-settings.xml
+.m2/
+settings.xml
+
+# DevOps files that are not needed inside the image
+k8s/
+docker-compose*.yml
+.env
+.env.*
+.git/
+.gitlab-ci.yml
+.github/

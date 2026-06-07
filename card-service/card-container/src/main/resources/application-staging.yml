@@ -1,0 +1,90 @@
+server:
+  port: 8007
+
+spring:
+  application:
+    name: card-service
+  datasource:
+    url: jdbc:oracle:thin:@//racs-scan.bmicc.ir:1521/card_stgsrv.bmicc.ir
+    username: card
+    password: c
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        envers:
+          audit_table_suffix: _AUD
+          store_data_at_delete: true
+          revision_field_name: rev
+          revision_type_field_name: revtype
+        dialect: org.hibernate.dialect.OracleDialect
+  flyway:
+    enabled: false
+    clean-disabled: false
+    validate-on-migrate: false
+    baseline-on-migrate: true
+    baseline-version: 1
+    schemas: CARD
+    locations: classpath:db/migration
+    out-of-order: false
+    group: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://192.168.104.20:8003/eureka
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+    info:
+      enabled: true
+  info:
+    app:
+      name: Card Service
+      version: 1.0.0
+      description: This is card service API
+file:
+  storage:
+    path: uploads/
+
+# SSM (production): آدرس و کلید دیکریپت از env برای امنیت
+ssm:
+  base:
+    url: ${SSM_BASE_URL:https://192.168.104.20:8009}
+  response:
+    decrypt:
+      key: ${SSM_DECRYPT_KEY:}
+# springdoc:
+#   swagger-ui:
+#     path: /swagger-ui.html
+#     config-url: /v3/api-docs/swagger-config
+#     url: /v3/api-docs
+#     operationsSorter: method
+#     tagsSorter: alpha
+#   api-docs:
+#     path: /v3/api-docs
+
+uaa:
+  client:
+    base-url: http://192.168.104.20:8010
+    token-path: /oauth2/token
+    client-id: card-service
+    client-secret: card_client_secret
+    scope: ""
+    jwk-set-uri: http://192.168.104.20:8010/oauth2/jwks
+    public-paths: /actuator/health,/actuator/info,/swagger-ui/**,/swagger-ui.html,/v3/api-docs/**,/swagger-resources/**,/webjars/**
+    access-control-enabled: false
+
+swagger:
+  oauth:
+    token-url: ${uaa.client.base-url}${uaa.client.token-path}
+    client-id: card-service
+    client-secret: card_client_secret

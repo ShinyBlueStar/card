@@ -1,0 +1,118 @@
+server:
+  port: 8007
+
+spring:
+  application:
+    name: card-service
+  datasource:
+    url: jdbc:oracle:thin:@//racs-scan.bmicc.ir:1521/card00srv.bmicc.ir
+    username: card
+    password: c00
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        envers:
+          audit_table_suffix: _AUD
+          store_data_at_delete: true
+          revision_field_name: rev
+          revision_type_field_name: revtype
+        dialect: org.hibernate.dialect.OracleDialect
+  flyway:
+    enabled: false
+    baseline-on-migrate: false
+    baseline-version: 1
+    schemas: CARD
+    locations: classpath:db/migration
+    out-of-order: false
+    group: true
+  data:
+    redis:
+      host: 192.168.104.20
+      port: 6379
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+redisson:
+  singleServerConfig:
+    address: "redis://192.168.104.20:6379"
+eureka:
+  client:
+    service-url:
+      defaultZone: http://192.168.104.20:8003/eureka
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+    info:
+      enabled: true
+  info:
+    app:
+      name: Card Service
+      version: 1.0.0
+      description: This is card service API
+file:
+  storage:
+    path: uploads/
+
+# HashiCorp Vault (encrypt/decrypt; each secret type has its own key)
+vault:
+  uri: http://192.168.104.20:8028
+  token: ${VAULT_TOKEN:}
+  role-id: ""
+  secret-id: ""
+  transit-mount: transit
+  pin-key: pin-hmac-key
+  cvv2-key: cvv2-cmac-key
+  otp-hmac-key: otp-hmac-key
+  otp-shared-secret-path: secret/data/otp
+  totp-step-seconds: 120
+  totp-digits: 6
+  totp-allowed-drift-steps: 1
+  pin-encrypt-key: pin-hmac-key
+  cvv2-encrypt-key: cvv2-cmac-key
+  otp-encrypt-key: otp-hmac-key
+
+# SSM service (HTTPS; PIN/CVV generation in production)
+ssm:
+  base:
+    url: https://192.168.104.10:8018
+  timeout-seconds: 10
+  response:
+    decrypt:
+      key: ""
+      # When SSM returns vault:v1:... ciphertext, key is chosen by secret type from vault.pin-encrypt-key / cvv2-encrypt-key / otp-encrypt-key
+      vaultKeyName: ""
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: WARN
+        type:
+          descriptor:
+            sql:
+              BasicBinder: WARN
+        engine:
+          jdbc:
+            connections: WARN
+      springframework:
+        jdbc:
+          core: INFO
+    com:
+      zaxxer:
+        hikari: INFO
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: alpha
+    default-models-expand-depth: -1

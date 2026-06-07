@@ -1,0 +1,74 @@
+server:
+  port: 8008
+
+spring:
+  application:
+    name: card-service
+  datasource:
+    url: jdbc:oracle:thin:@//racs-scan.bmicc.ir:1521/card00srv.bmicc.ir
+    username: card
+    password: c00
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        envers:
+          audit_table_suffix: _AUD
+          store_data_at_delete: true
+          revision_field_name: rev
+          revision_type_field_name: revtype
+        dialect: org.hibernate.dialect.OracleDialect
+  flyway:
+    enabled: false
+    clean-disabled: false
+    clean-on-validation-error: true
+    validate-on-migrate: false
+    baseline-on-migrate: true
+    baseline-version: 1
+    schemas: CARD
+    locations: classpath:db/migration
+    out-of-order: false
+    group: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://192.168.104.20:8003/eureka
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+    info:
+      enabled: true
+  info:
+    app:
+      name: Card Service
+      version: 1.0.0
+      description: This is card service API
+file:
+  storage:
+    path: uploads/
+
+# SSM (production): آدرس و کلید دیکریپت از env برای امنیت
+ssm:
+  base:
+    url: ${SSM_BASE_URL:https://192.168.104.10:8018}
+  response:
+    decrypt:
+      key: ${SSM_DECRYPT_KEY:}
+# springdoc:
+#   swagger-ui:
+#     path: /swagger-ui.html
+#     config-url: /v3/api-docs/swagger-config
+#     url: /v3/api-docs
+#     operationsSorter: method
+#     tagsSorter: alpha
+#   api-docs:
+#     path: /v3/api-docs
