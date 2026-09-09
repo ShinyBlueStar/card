@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: card-service-config
+data:
+  # application-prod.properties reads its values from these variables
+  SPRING_PROFILES_ACTIVE: "prod"
+  SERVER_PORT: "8007"
+  FILE_STORAGE_PATH: "/app/uploads/"
+
+  CARD_DATASOURCE_URL: "jdbc:oracle:thin:@//192.168.104.52:1521/cardsrv.bmicc.ir"
+  CARD_DATASOURCE_USERNAME: "card"
+
+  SPRING_DATA_REDIS_HOST: "redis-svc.redis.svc.cluster.local"
+  SPRING_DATA_REDIS_PORT: "6379"
+
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server-svc.dragon.svc.cluster.local/eureka"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+
+  VAULT_URI: "http://192.168.104.20:8028"
+  SSM_BASE_URL: "https://192.168.91.50:30009"
+  PARTY_BASE_URL: "http://192.168.104.20:8001"
+  UAA_CLIENT_BASE_URL: "https://stage-sbu-panel.bmicc.ir"
+  UAA_CLIENT_JWK_SET_URI: "https://stage-sbu-panel.bmicc.ir/oauth2/jwks"
+
+  # Probes for the kubelet; expose only health and info over HTTP
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info"
+
+  # application.yml logs SQL bind values at TRACE (card data); keep that off in the cluster
+  SPRING_JPA_SHOW_SQL: "false"
+  LOGGING_LEVEL_ORG_HIBERNATE_SQL: "WARN"
+  LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL_BASICBINDER: "WARN"
+  LOGGING_LEVEL_ORG_HIBERNATE_ENGINE_JDBC_CONNECTIONS: "WARN"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC_CORE: "INFO"
+  LOGGING_LEVEL_COM_ZAXXER_HIKARI: "INFO"
+
+  JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"

@@ -1,0 +1,112 @@
+# CI/CD for card-service
+#
+# Required CI/CD variables (Settings > CI/CD > Variables, masked):
+#   NEXUS_USERNAME, NEXUS_PASSWORD      private Maven repository (uaa-client)
+#   REGISTRY_USER, REGISTRY_PASSWORD    registry.bmicc.ir
+#   KUBECONFIG_STAGING (type: File)     only for the deploy-k8s-staging job
+
+stages:
+  - test
+  - dockerize
+  - deploy
+
+variables:
+  MAVEN_IMAGE: "hub.bmicc.ir/library/maven:3.9.6-eclipse-temurin-21"
+  DOCKER_IMAGE: "docker:27"
+  DIND_IMAGE: "docker:27-dind"
+  IMAGE_NAME: "registry.bmicc.ir/library/cardservice"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI: "-B -ntp -s ci/maven-settings.xml"
+  # plain docker deployment on the stage host
+  CONTAINER_NAME: "cardservice"
+  PORT: "192.168.104.20:8007"
+  NETWORK: "backend"
+
+.on_stage_push: &on_stage_push
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "stage"'
+
+test:
+  stage: test
+  image: $MAVEN_IMAGE
+  tags:
+    - card-runner
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - .m2/repository
+  script:
+    - mvn $MAVEN_CLI verify
+  artifacts:
+    when: always
+    expire_in: 1 week
+    reports:
+      junit:
+        - "**/target/surefire-reports/TEST-*.xml"
+    paths:
+      - "**/target/site/jacoco/"
+
+dockerize:
+  stage: dockerize
+  <<: *on_stage_push
+  image: $DOCKER_IMAGE
+  services:
+    - name: $DIND_IMAGE
+      alias: docker
+  tags:
+    - card-runner
+  variables:
+    DOCKER_BUILDKIT: "1"
+  script:
+    - echo "$REGISTRY_PASSWORD" | docker login registry.bmicc.ir -u "$REGISTRY_USER" --password-stdin
+    - >
+      docker build -f card-container/Dockerfile
+      --secret id=nexus_username,env=NEXUS_USERNAME
+      --secret id=nexus_password,env=NEXUS_PASSWORD
+      -t "$IMAGE_NAME:$IMAGE_TAG" -t "$IMAGE_NAME:latest" .
+    - docker push "$IMAGE_NAME:$IMAGE_TAG"
+    - docker push "$IMAGE_NAME:latest"
+
+deploy:
+  stage: deploy
+  <<: *on_stage_push
+  image: $DOCKER_IMAGE
+  services:
+    - name: $DIND_IMAGE
+      alias: docker
+  tags:
+    - card-runner
+  script:
+    - echo "Deploying $IMAGE_NAME:$IMAGE_TAG on $PORT"
+    - echo "$REGISTRY_PASSWORD" | docker login registry.bmicc.ir -u "$REGISTRY_USER" --password-stdin
+    - docker pull "$IMAGE_NAME:$IMAGE_TAG"
+    - docker stop "$CONTAINER_NAME" || true
+    - docker rm "$CONTAINER_NAME" || true
+    - >
+      docker run -d --name "$CONTAINER_NAME" --restart unless-stopped
+      -p "$PORT:8007" --network "$NETWORK"
+      -e SPRING_PROFILES_ACTIVE=staging
+      "$IMAGE_NAME:$IMAGE_TAG"
+
+# Kubernetes rollout (manual until the cluster is the primary target)
+deploy-k8s-staging:
+  stage: deploy
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "stage"'
+      when: manual
+  image:
+    name: bitnami/kubectl:1.31
+    entrypoint: [""]
+  tags:
+    - card-runner
+  environment:
+    name: staging
+  variables:
+    KUBECONFIG: "$KUBECONFIG_STAGING"
+  script:
+    - kubectl kustomize k8s/overlays/staging | sed "s#$IMAGE_NAME:latest#$IMAGE_NAME:$IMAGE_TAG#" | kubectl apply -f -
+    - kubectl -n dragon rollout status deployment/card-service --timeout=300s

@@ -1,0 +1,12 @@
+# Generated print/access files are written here and downloaded later, possibly by another pod,
+# so the volume must be shared between replicas (ReadWriteMany, e.g. NFS or CephFS).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: card-service-uploads
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi

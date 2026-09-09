@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dragon
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: card-service
+      app.kubernetes.io/part-of: pcp-banking
+    includeSelectors: true
+
+resources:
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+  - pvc.yaml
+  - hpa.yaml
+  - pdb.yaml
+  # secret.example.yaml is a template only; create the real secret out of band (see README.md)
+
+images:
+  - name: card-service
+    newName: registry.bmicc.ir/library/cardservice
+    newTag: latest

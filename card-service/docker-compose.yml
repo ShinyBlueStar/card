@@ -1,0 +1,140 @@
+# Local environment for card-service: the service plus Oracle, Redis and Vault.
+#
+#   cp .env.example .env        # adjust values, add Nexus credentials
+#   docker compose up -d --build
+#   curl http://localhost:8007/actuator/health
+#
+# Swagger UI: http://localhost:8007/swagger-ui.html
+
+name: card-service
+
+services:
+
+  card-service:
+    build:
+      context: .
+      dockerfile: card-container/Dockerfile
+      args:
+        REGISTRY: ${BASE_IMAGE_REGISTRY:-hub.bmicc.ir/library}
+      secrets:
+        - nexus_username
+        - nexus_password
+    image: ${CARD_IMAGE:-card-service:local}
+    container_name: card-service
+    ports:
+      - "${CARD_PORT:-8007}:8007"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SERVER_PORT: "8007"
+      # Database
+      CARD_DATASOURCE_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
+      CARD_DATASOURCE_USERNAME: card
+      CARD_DATASOURCE_PASSWORD: ${CARD_DB_PASSWORD:-card_local}
+      # Redis (used by Redisson and the PAN cache)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_local}
+      # Vault transit engine (PIN / CVV2 / OTP keys created by vault-init)
+      VAULT_URI: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN:-root}
+      # No service registry locally
+      EUREKA_CLIENT_ENABLED: "false"
+      # External systems; point these at stage services or mocks
+      SSM_BASE_URL: ${SSM_BASE_URL:-https://192.168.104.10:8018}
+      PARTY_BASE_URL: ${PARTY_BASE_URL:-http://192.168.104.20:8001}
+      UAA_CLIENT_BASE_URL: ${UAA_BASE_URL:-https://stage-sbu-panel.bmicc.ir}
+      UAA_CLIENT_JWK_SET_URI: ${UAA_BASE_URL:-https://stage-sbu-panel.bmicc.ir}/oauth2/jwks
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+    volumes:
+      - card-uploads:/app/uploads
+    depends_on:
+      oracle:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  oracle:
+    image: gvenzl/oracle-free:23-slim-faststart
+    container_name: card-oracle
+    ports:
+      - "${ORACLE_PORT:-1521}:1521"
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_ADMIN_PASSWORD:-oracle_local}
+      APP_USER: card
+      APP_USER_PASSWORD: ${CARD_DB_PASSWORD:-card_local}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: card-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redis_local}", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_local}
+
+  # Dev-mode Vault: in-memory, unsealed, NOT for production
+  vault:
+    image: hashicorp/vault:1.17
+    container_name: card-vault
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_TOKEN:-root}
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    healthcheck:
+      test: ["CMD", "vault", "status", "-address=http://127.0.0.1:8200"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Creates the transit engine and the keys named in application.yml (vault.*-key)
+  vault-init:
+    image: hashicorp/vault:1.17
+    container_name: card-vault-init
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN:-root}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        vault secrets list | grep -q '^transit/' || vault secrets enable transit
+        for key in pin-hmac-key cvv2-cmac-key otp-hmac-key; do
+          vault read "transit/keys/$$key" >/dev/null 2>&1 || vault write -f "transit/keys/$$key"
+        done
+        echo "Vault transit keys ready"
+    restart: "no"
+
+secrets:
+  nexus_username:
+    environment: NEXUS_USERNAME
+  nexus_password:
+    environment: NEXUS_PASSWORD
+
+volumes:
+  card-uploads:
+  oracle-data:
+  redis-data:
