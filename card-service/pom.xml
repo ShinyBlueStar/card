@@ -67,11 +67,11 @@
     <distributionManagement>
         <repository>
             <id>private-nexus</id>
-            <url>http://192.168.103.20:8081/repository/maven-releases/</url>
+            <url>${nexus.url}/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
             <id>private-nexus</id>
-            <url>http://192.168.103.20:8081/repository/maven-snapshots/</url>
+            <url>${nexus.url}/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 

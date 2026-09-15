@@ -35,7 +35,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://192.168.104.20:8003/eureka
+      defaultZone: ${EUREKA_URL:}
     register-with-eureka: true
     fetch-registry: true
 
@@ -58,7 +58,7 @@ file:
 # SSM (production): آدرس و کلید دیکریپت از env برای امنیت
 ssm:
   base:
-    url: ${SSM_BASE_URL:https://192.168.104.20:8009}
+    url: ${SSM_BASE_URL:}
   response:
     decrypt:
       key: ${SSM_DECRYPT_KEY:}
@@ -74,12 +74,12 @@ ssm:
 
 uaa:
   client:
-    base-url: http://192.168.104.20:8010
+    base-url: ${UAA_BASE_URL:}
     token-path: /oauth2/token
     client-id: card-service
     client-secret: card_client_secret
     scope: ""
-    jwk-set-uri: http://192.168.104.20:8010/oauth2/jwks
+    jwk-set-uri: ${UAA_BASE_URL:}/oauth2/jwks
     public-paths: /actuator/health,/actuator/info,/swagger-ui/**,/swagger-ui.html,/v3/api-docs/**,/swagger-resources/**,/webjars/**
     access-control-enabled: false
 

@@ -20,7 +20,7 @@ variables:
   MAVEN_CLI: "-B -ntp -s ci/maven-settings.xml"
   # plain docker deployment on the stage host
   CONTAINER_NAME: "cardservice"
-  PORT: "192.168.104.20:8007"
+  PORT: "$DEPLOY_HOST:8007"
   NETWORK: "backend"
 
 .on_stage_push: &on_stage_push

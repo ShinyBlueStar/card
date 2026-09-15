@@ -40,8 +40,8 @@ services:
       # No service registry locally
       EUREKA_CLIENT_ENABLED: "false"
       # External systems; point these at stage services or mocks
-      SSM_BASE_URL: ${SSM_BASE_URL:-https://192.168.104.10:8018}
-      PARTY_BASE_URL: ${PARTY_BASE_URL:-http://192.168.104.20:8001}
+      SSM_BASE_URL: ${SSM_BASE_URL:-}
+      PARTY_BASE_URL: ${PARTY_BASE_URL:-}
       UAA_CLIENT_BASE_URL: ${UAA_BASE_URL:-https://stage-sbu-panel.bmicc.ir}
       UAA_CLIENT_JWK_SET_URI: ${UAA_BASE_URL:-https://stage-sbu-panel.bmicc.ir}/oauth2/jwks
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"

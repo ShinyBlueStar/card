@@ -23,7 +23,7 @@ patches:
         value: "jdbc:oracle:thin:@//racs-scan.bmicc.ir:1521/card_stgsrv.bmicc.ir"
       - op: replace
         path: /data/SSM_BASE_URL
-        value: "https://192.168.104.20:8009"
+        value: "https://<host>:8009"
   - target:
       kind: HorizontalPodAutoscaler
       name: card-service

@@ -22,7 +22,7 @@ patches:
       # which is not implemented (throws UnsupportedOperationException).
       - op: replace
         path: /data/SSM_BASE_URL
-        value: "https://192.168.104.10:8018"
+        value: "https://<host>:8018"
   - target:
       kind: Deployment
       name: card-service

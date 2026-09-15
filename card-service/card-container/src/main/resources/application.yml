@@ -31,17 +31,17 @@ spring:
     group: true
   data:
     redis:
-      host: 192.168.104.20
+      host: ${REDIS_HOST:}
       port: 6379
   lifecycle:
     timeout-per-shutdown-phase: 20s
 redisson:
   singleServerConfig:
-    address: "redis://192.168.104.20:6379"
+    address: "redis://${REDIS_HOST:}:6379"
 eureka:
   client:
     service-url:
-      defaultZone: http://192.168.104.20:8003/eureka
+      defaultZone: ${EUREKA_URL:}
     register-with-eureka: true
     fetch-registry: true
 
@@ -63,7 +63,7 @@ file:
 
 # HashiCorp Vault (encrypt/decrypt; each secret type has its own key)
 vault:
-  uri: http://192.168.104.20:8028
+  uri: ${VAULT_URI:}
   token: ${VAULT_TOKEN:}
   role-id: ""
   secret-id: ""
@@ -82,7 +82,7 @@ vault:
 # SSM service (HTTPS; PIN/CVV generation in production)
 ssm:
   base:
-    url: https://192.168.104.10:8018
+    url: ${SSM_BASE_URL:}
   timeout-seconds: 10
   response:
     decrypt:

@@ -29,7 +29,7 @@ public class PartyChannelRestImpl implements PartyChannel {
     @Value("${party.timeout-seconds:30}")
     private String timeout;
 
-    @Value("${party.base.url:http://192.168.104.20:8001}")
+    @Value("${party.base.url:}")
     private String baseUrl;
 
     @Value("${party.individual.url:/api/v1/party/individual/info/}")

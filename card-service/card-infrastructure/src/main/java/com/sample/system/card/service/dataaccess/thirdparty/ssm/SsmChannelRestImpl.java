@@ -37,7 +37,7 @@ public class SsmChannelRestImpl implements SsmChannel {
 
     private final ObjectMapper objectMapper;
 
-    @Value("${ssm.base.url:https://192.168.104.20:8009}")
+    @Value("${ssm.base.url:}")
     private String ssmBaseUrl;
 
     @Value("${ssm.timeout-seconds:1000}")

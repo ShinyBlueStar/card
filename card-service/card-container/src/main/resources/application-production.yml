@@ -36,7 +36,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://192.168.104.20:8003/eureka
+      defaultZone: ${EUREKA_URL:}
     register-with-eureka: true
     fetch-registry: true
 
@@ -59,7 +59,7 @@ file:
 # SSM (production): آدرس و کلید دیکریپت از env برای امنیت
 ssm:
   base:
-    url: ${SSM_BASE_URL:https://192.168.104.10:8018}
+    url: ${SSM_BASE_URL:}
   response:
     decrypt:
       key: ${SSM_DECRYPT_KEY:}

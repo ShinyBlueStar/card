@@ -8,7 +8,7 @@ data:
   SERVER_PORT: "8007"
   FILE_STORAGE_PATH: "/app/uploads/"
 
-  CARD_DATASOURCE_URL: "jdbc:oracle:thin:@//192.168.104.52:1521/cardsrv.bmicc.ir"
+  CARD_DATASOURCE_URL: "jdbc:oracle:thin:@//<host>:1521/cardsrv.bmicc.ir"
   CARD_DATASOURCE_USERNAME: "card"
 
   SPRING_DATA_REDIS_HOST: "redis-svc.redis.svc.cluster.local"
@@ -17,9 +17,9 @@ data:
   EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server-svc.dragon.svc.cluster.local/eureka"
   EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
-  VAULT_URI: "http://192.168.104.20:8028"
-  SSM_BASE_URL: "https://192.168.91.50:30009"
-  PARTY_BASE_URL: "http://192.168.104.20:8001"
+  VAULT_URI: "http://<host>:8028"
+  SSM_BASE_URL: "https://<host>:30009"
+  PARTY_BASE_URL: "http://<host>:8001"
   UAA_CLIENT_BASE_URL: "https://stage-sbu-panel.bmicc.ir"
   UAA_CLIENT_JWK_SET_URI: "https://stage-sbu-panel.bmicc.ir/oauth2/jwks"
 
