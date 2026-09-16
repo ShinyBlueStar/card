@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +26,6 @@ import static com.sample.system.card.service.dataaccess.thirdparty.WebCallUtils.
  */
 @Slf4j
 @Service
-@Primary
 @RequiredArgsConstructor
 public class SsmChannelRestImpl implements SsmChannel {
 

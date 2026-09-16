@@ -116,3 +116,23 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
     default-models-expand-depth: -1
+
+# Circuit breakers for external services (see ThirdPartyCircuitBreaker).
+# Only timeouts / connection errors / 5xx count as failures (ThirdPartyFailurePredicate).
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordFailurePredicate: com.sample.system.card.service.dataaccess.thirdparty.ThirdPartyFailurePredicate
+    instances:
+      party:
+        baseConfig: default
+      ssm:
+        baseConfig: default
