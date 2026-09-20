@@ -99,8 +99,11 @@ class ThirdPartyCircuitBreakerTest {
         for (int i = 0; i < 4; i++) {
             assertThrows(ThirdPartyException.class, () -> channel.getPartyIndividual("9"));
         }
+        assertEquals(CircuitBreaker.State.OPEN, registry.circuitBreaker("party").getState());
+
+        int callsBeforeRejection = mockingDetails(delegate).getInvocations().size();
         ThirdPartyException open = assertThrows(ThirdPartyException.class, () -> channel.getPartyIndividual("9"));
         assertEquals("service temporarily unavailable", open.getChannelMessage());
-        verify(delegate, times(4)).getPartyIndividual("9");
+        assertEquals(callsBeforeRejection, mockingDetails(delegate).getInvocations().size());
     }
 }
